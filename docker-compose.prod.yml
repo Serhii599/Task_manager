@@ -13,6 +13,8 @@ services:
       dockerfile: Dockerfile.prod
     env_file:
       - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.prod
     depends_on:
       - db
     expose:
