@@ -11,6 +11,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
+    volumes:
+      - .:/app
+      - ./static:/app/static
     env_file:
       - .env
     environment:
