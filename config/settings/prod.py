@@ -10,7 +10,7 @@ STATIC_ROOT = "/static/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = "/media/"
 
-CSRF_TRUSTED_ORIGINS = ["*", "http://13.60.12.128", "https://13.60.12.128"]
+CSRF_TRUSTED_ORIGINS = ["http://13.60.12.128", "https://13.60.12.128"]
 
 LOGGING = {
     "version": 1,
