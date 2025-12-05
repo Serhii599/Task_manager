@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}My tasks table{% endblock %}
+{% block content %}
+    <div>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Tasks number</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for project in projects %}
+            <tr class="project-row" data-href="{% url 'main_app:one_project' project.id %}">
+                <td>{{ project.project_name }}</td>
+                <td>{{ project.project_description }}</td>
+                <td>{{ project.status }}</td>
+                <td>{{ project.priority }}</td>
+                <td>{{ project.task_count }}</td>
+                <td class="center-button">
+                    <form method="post" action="{% url 'main_app:project_delete' project.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="button-24">X</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".project-row").forEach(row => {
+        row.addEventListener("click", () => {
+            window.location = row.dataset.href;
+        });
+    });
+});
+</script>
+{% endblock %}

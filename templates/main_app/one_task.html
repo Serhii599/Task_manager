@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Task: {{ task.task_name }}{% endblock %}
+
+{% block content %}
+<div class="task-page">
+
+    <!-- Left sidebar with other tasks of the assignee -->
+    <div class="task-left">
+        <h3>Other tasks of {{ task.assignee.first_name }}</h3>
+
+      <div class="other-tasks-list">
+          {% for t in other_tasks %}
+              <div class="other-task-item"
+                  data-href="{% url 'main_app:one_task' t.id %}">
+                  <span>{{ t.task_name }}</span>
+                  <span class="due-date">{{ t.due_date|date:"d M" }}</span>
+              </div>
+          {% empty %}
+              <p>No other tasks</p>
+          {% endfor %}
+      </div>
+    </div>
+
+    <!-- Middle column (task content) -->
+    <div class="task-center">
+        <div class="task-title">
+            {{ task.task_name }}
+        </div>
+
+        <div class="task-description-box">
+            <h4>Description</h4>
+            <p class="task-description">
+                {{ task.task_description|linebreaks }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Right column (details + buttons) -->
+    <div class="task-right">
+
+        {% if task.status != "Done" %}
+        <form action="{% url 'main_app:task_mark_done' task.id %}" method="post">
+            {% csrf_token %}
+            <button class="btn-done" type="submit" style="width:100%; margin-bottom:10px;">
+                Mark as done
+            </button>
+        </form>
+        {% endif %}
+
+        <a href="{% url 'main_app:task_edit' task.id %}">
+            <button class="btn-edit" style="width:100%; margin-bottom:10px;">
+                Edit task
+            </button>
+        </a>
+
+        <form  method="post" action="{% url 'main_app:task_delete' task.id %}">
+            {% csrf_token %}
+            <button class="button-24" style="width:100%; margin-bottom:20px;">
+                Delete task
+            </button>
+        </form>
+
+        <div class="task-meta">
+            <div class="task-info-box">
+                <strong>Assignee:</strong> {{ task.assignee.first_name }}
+            </div>
+
+            <div class="task-info-box">
+                <strong>Due date:</strong> {{ task.due_date }}
+            </div>
+
+            <div class="task-info-box">
+                <strong>Status:</strong> {{ task.status }}
+            </div>
+
+            <div class="task-info-box">
+                <strong>Priority:</strong> {{ task.priority }}
+            </div>
+
+            <div class="task-info-box">
+                <strong>Projects:</strong>
+                <ul>
+                    {% for p in task.projects.all %}
+                        <li>{{ p.project_name }}</li>
+                    {% empty %}
+                        <li>No projects</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="task-info-box">
+                <strong>Collaborators:</strong>
+                <ul>
+                    {% for u in task.collaborators.all %}
+                        <li>{{ u.first_name }}</li>
+                    {% empty %}
+                        <li>No collaborators</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <form action="{% url 'main_app:task_leave' task.id %}" method="post" style="margin-top:20px;">
+            {% csrf_token %}
+            <button class="button-12" style="width:100%;">Leave task</button>
+        </form>
+
+    </div>
+</div>
+
+<style>
+/* Page layout */
+.task-page {
+    display: grid;
+    grid-template-columns: 260px 1fr 320px;
+    gap: 30px;
+    padding: 20px;
+    width: 155%;
+    box-sizing: border-box;
+}
+
+/* Left column */
+.task-left h3 {
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #333;
+}
+
+.other-task-item {
+    background: #f5f5f5;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    color: #333;
+    font-size: 14px;
+}
+
+.other-task-item .due-date {
+    color: #666;
+}
+
+/* Middle column */
+.task-title {
+    font-size: 22px;
+    padding: 12px;
+    background: #4a5565ff;
+    color: white;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.task-description-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.task-description {
+    margin-top: 10px;
+    color: #444;
+}
+
+/* Right column */
+.task-right {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.task-info-box {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.task-info-box ul {
+    padding-left: 20px;
+}
+
+.btn-done {
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    background-color: #77dd77; /* зелений */
+    color: #1a1a1a;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-done:hover {
+    background-color: #6ad06a;
+    transform: translateY(-1px);
+}
+
+.btn-done:active {
+    background-color: #5cb95c;
+    transform: translateY(0);
+}
+.btn-edit {
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    background-color: #e5e5e5;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-edit:hover {
+    background-color: #d4d4d4;
+    transform: translateY(-1px);
+}
+
+.btn-edit:active {
+    background-color: #c9c9c9;
+    transform: translateY(0);
+}
+
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".other-task-item").forEach(item => {
+        item.addEventListener("click", () => {
+            window.location = item.dataset.href;
+        });
+    });
+});
+</script>
+
+
+{% endblock %}

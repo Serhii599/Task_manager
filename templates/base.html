@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <header>
+    {% block head %}
+            <div class="header-left">
+                <h3>My App</h3>
+            </div>
+            <div class="header-right">
+                <div>
+                    <a href="{% url 'main_app:task_create' %}" class="{% if request.path == '/tasks/create' %}active{% endif %}">Create task</a>
+                    <a href="{% url 'main_app:project_create' %}" class="{% if request.path == '/project/create' %}active{% endif %}">Create project</a>
+                </div>
+                <div>Welcome {{ user.first_name }}</div>
+            </div>
+    {% endblock %}
+    </header>
+
+    <main class="layout">
+        <div class="container">
+            <div class="sidebar">
+                <ul class="sidebar-content">
+                  <li><a href="{% url 'main_app:users_list' %}" {% if request.path == '/users/' %}class="active"{% endif %}>Users list</a></li>
+                  <li><a href="{% url 'main_app:my_tasks' %}" class="{% if request.path == '/tasks/' %}active{% endif %}">My tasks</a></li>
+                  <li><a href="{% url 'main_app:projects_view' %}" class="{% if request.path == '/projects/' %}active{% endif %}">Projects</a></li>
+                </ul>
+                <div class="sidebar-bottom">
+                <form method="post" action="{% url 'authentication:logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="button-12">Logout</button>
+                </form>
+                </div><br/>
+                <div style="font-size: 6px;">
+                &copy; Copyright 2025 by <a href="https://www.facebook.com/profile.php?id=61572798751998">Serhii Plavutskyi</a>.
+                </div>
+            </div>
+            <div class="content">{% block content %}{% endblock %}</div>
+        </div>
+    </main>
+
+    <footer id="footer">
+    {% block footer %}
+    {% endblock %}
+  </footer>
+</body>
+</html>

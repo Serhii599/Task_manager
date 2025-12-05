@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit task{% endblock %}
+
+{% block content %}
+
+<div class="edit-wrapper">
+    <div class="edit-box">
+
+        <h2>Edit task</h2>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+            <button type="submit" class="btn-edit-save">Save changes</button>
+        </form>
+
+        <a href="{% url 'main_app:one_task' task.id %}">
+            <button class="btn-edit-cancel">Cancel</button>
+        </a>
+
+    </div>
+</div>
+
+<style>
+/* Center positioning */
+.edit-wrapper {
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    padding-top: 40px;
+}
+
+/* Edit box */
+.edit-box {
+    background: #ffffff;
+    padding: 35px 40px;
+    width: 450px;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    font-family: helvetica, 'Roboto', sans-serif;
+}
+
+.edit-box h2 {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Form fields */
+.edit-box form p {
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+    font-size: 15px;
+    color: #555;
+}
+
+.edit-box input,
+.edit-box select,
+.edit-box textarea {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.edit-box input:focus,
+.edit-box select:focus,
+.edit-box textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+/* Save button */
+.btn-edit-save {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-weight: 650;
+    background-color: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-edit-save:hover {
+    background-color: #2f6fe0;
+    transform: translateY(-1px);
+}
+
+.btn-edit-save:active {
+    transform: translateY(0);
+}
+
+/* Cancel button */
+.btn-edit-cancel {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-weight: 600;
+    background-color: #e5e5e5;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-edit-cancel:hover {
+    background-color: #d5d5d5;
+    transform: translateY(-1px);
+}
+</style>
+
+{% endblock %}

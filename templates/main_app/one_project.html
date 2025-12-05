@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Project: {{ project.project_name }}{% endblock %}
+
+{% block content %}
+
+<div class="project-page">
+
+    <!-- LEFT: tasks in this project -->
+    <div class="project-left">
+
+        <h3>Tasks in project</h3>
+
+        <!-- FILTERS -->
+        <form method="get" id="filtersForm" class="project-filters">
+
+            <select name="status" onchange="document.getElementById('filtersForm').submit()">
+                <option value="">All statuses</option>
+                <option value="Backlog"      {% if request.GET.status == "Backlog" %}selected{% endif %}>Backlog</option>
+                <option value="To do"        {% if request.GET.status == "To do" %}selected{% endif %}>To do</option>
+                <option value="In progress"  {% if request.GET.status == "In progress" %}selected{% endif %}>In progress</option>
+                <option value="Done"         {% if request.GET.status == "Done" %}selected{% endif %}>Done</option>
+            </select>
+
+            <select name="priority" onchange="document.getElementById('filtersForm').submit()">
+                <option value="">All priorities</option>
+                <option value="Low"     {% if request.GET.priority == "Low" %}selected{% endif %}>Low</option>
+                <option value="Medium"  {% if request.GET.priority == "Medium" %}selected{% endif %}>Medium</option>
+                <option value="High"    {% if request.GET.priority == "High" %}selected{% endif %}>High</option>
+                <option value="Urgent"  {% if request.GET.priority == "Urgent" %}selected{% endif %}>Urgent</option>
+            </select>
+
+        </form>
+
+        <div class="sort-buttons">
+
+            <a href="?sort=task_name{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
+                Sort by name
+            </a>
+
+            <a href="?sort=due_date{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
+                Sort by deadline
+            </a>
+
+            <a href="?sort=status{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
+                Sort by status
+            </a>
+
+            <a href="?sort=priority{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
+                Sort by priority
+            </a>
+
+        </div>
+
+        <!-- TASK LIST -->
+        <div class="project-tasks-list">
+            {% for task in tasks %}
+                <div class="project-task-item" data-href="{% url 'main_app:one_task' task.id %}">
+                    <span>{{ task.task_name }}</span>
+                    <span class="due-date">{{ task.due_date|date:"d M" }}</span>
+                    <span class="due-date">{{ task.assignee.first_name }}</span>
+                    <span class="due-date">{{ task.status }}</span>
+                    <span class="due-date">{{ task.priority }}</span>
+                    <span class="center-button">
+                        <form method="post" action="{% url 'main_app:task_delete' task.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="button-24">X</button>
+                        </form>
+                    </span>
+                </div>
+            {% empty %}
+                <p>No tasks in this project</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- CENTER: project info -->
+    <div class="project-center">
+
+        <div class="project-title">
+            {{ project.project_name }}
+        </div>
+
+        <div class="project-description-box">
+            <h4>Description</h4>
+            <p class="project-description">
+                {% if project.project_description %}
+                    {{ project.project_description|linebreaks }}
+                {% else %}
+                    <i>No description provided.</i>
+                {% endif %}
+            </p>
+        </div>
+
+    </div>
+
+    <!-- RIGHT: actions + meta -->
+    <div class="project-right">
+
+        <a href="{% url 'main_app:project_edit' project.id %}">
+            <button class="btn-edit">Edit project</button>
+        </a>
+
+        <form action="{% url 'main_app:project_delete' project.id %}" method="post">
+            {% csrf_token %}
+            <button class="button-24" style="width:100%; margin-bottom:20px; margin-top:10px;">Delete project</button>
+        </form>
+
+
+        <!-- NEW BUTTON — GENERATE REPORT -->
+        <a href="{% url 'main_app:project_report' project.id %}">
+            <button class="btn-report">Generate report</button>
+        </a>
+
+        <div class="project-meta">
+
+            <div class="project-info-box">
+                <strong>Creator:</strong> {{ project.creator.first_name }}
+            </div>
+
+            <div class="project-info-box">
+                <strong>Total tasks:</strong> {{ project.tasks.count }}
+            </div>
+
+            <div class="project-info-box">
+                <strong>Collaborators:</strong>
+                <ul>
+                    {% for u in project.collaborators.all %}
+                        <li>{{ u.first_name }}</li>
+                    {% empty %}
+                        <li>No collaborators</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+
+        <a href="{% url 'main_app:projects_view' %}">
+            <button class="button-12" style="width:100%;margin-top:20px;">Back to projects</button>
+        </a>
+
+      </div>
+
+        <div class="project-meta">
+
+            <div class="project-info-box">
+                <strong>Creator:</strong> {{ project.creator.first_name }}
+            </div>
+
+            <div class="project-info-box">
+                <strong>Total tasks:</strong> {{ project.tasks.count }}
+            </div>
+
+            <div class="project-info-box">
+                <strong>Collaborators:</strong>
+                <ul>
+                    {% for u in project.collaborators.all %}
+                        <li>{{ u.first_name }}</li>
+                    {% empty %}
+                        <li>No collaborators</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+
+        <a href="{% url 'main_app:projects_view' %}">
+            <button class="button-12" style="width:100%;margin-top:20px;">Back to projects</button>
+        </a>
+
+    </div>
+
+</div>
+
+
+<style>
+/* Grid layout */
+.project-page {
+    display: grid;
+    grid-template-columns: 32vw 30vw 18vw;
+    gap: 30px;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* LEFT COLUMN */
+.project-left h3 {
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #333;
+}
+
+.project-task-item {
+    background: #f5f5f5;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.project-task-item:hover {
+    background: #e8e8e8;
+}
+
+.project-task-item .due-date {
+    color: #666;
+}
+
+/* CENTER COLUMN */
+.project-title {
+    font-size: 22px;
+    padding: 12px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.project-description-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.project-description {
+    margin-top: 10px;
+    color: #444;
+}
+
+/* RIGHT COLUMN */
+.project-right {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.project-info-box {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.project-info-box ul {
+    padding-left: 20px;
+}
+
+.btn-done {
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    background-color: #77dd77; /* зелений */
+    color: #1a1a1a;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-done:hover {
+    background-color: #6ad06a;
+    transform: translateY(-1px);
+}
+
+.btn-done:active {
+    background-color: #5cb95c;
+    transform: translateY(0);
+}
+.btn-edit {
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    background-color: #e5e5e5;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-edit:hover {
+    background-color: #d4d4d4;
+    transform: translateY(-1px);
+}
+
+.btn-edit:active {
+    background-color: #c9c9c9;
+    transform: translateY(0);
+}
+.project-filters select {
+    padding: 8px;
+    margin-bottom: 12px;
+}
+
+.sort-buttons a {
+    display: inline-block;
+    padding: 4px 8px;
+    margin-right: 8px;
+    font-size: 12px;
+    color: #333;
+    background: #eee;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.sort-buttons a:hover {
+    background: #ddd;
+}
+</style>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".project-task-item").forEach(item => {
+        item.addEventListener("click", () => {
+            window.location = item.dataset.href;
+        });
+    });
+});
+</script>
+
+{% endblock %}

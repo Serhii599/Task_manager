@@ -1,0 +1,53 @@
+# Byte-compiled / optimized / cached files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+env/
+venv/
+.env/
+.venv/
+
+# Database files
+db.sqlite3
+*.sqlite3-journal
+
+# Media and static files (if collected locally for development)
+# Ensure these are not committed if they are generated on the server or built by a separate process.
+/media/
+/static_collected/
+
+# Local settings and environment variables
+local_settings.py
+.env
+.flaskenv
+
+# IDE and editor files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+.DS_Store
+
+# Logs and temporary files
+*.log
+tmp/
+
+# Pipenv files
+Pipfile.lock
+
+# Poetry files
+poetry.lock
+
+# MyPy cache
+.mypy_cache/
+
+# Pyenv
+.python-version
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/

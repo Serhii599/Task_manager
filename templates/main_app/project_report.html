@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Report — {{ project.project_name }}{% endblock %}
+
+{% block content %}
+
+<div class="report-container">
+
+    <!-- PAGE TITLE -->
+    <div class="report-header">
+        <h2>Project Report</h2>
+        <h3>{{ project.project_name }}</h3>
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="report-cards">
+
+        <div class="report-card">
+            <span class="label">Total tasks</span>
+            <span class="value">{{ project.tasks.count }}</span>
+        </div>
+
+        <div class="report-card">
+            <span class="label">Tasks completed</span>
+            <span class="value">{{ total_done }}</span>
+        </div>
+
+        <div class="report-card">
+            <span class="label">Overdue tasks</span>
+            <span class="value">{{ overdue_tasks.count }}</span>
+        </div>
+
+    </div>
+
+
+    <!-- TOP 3 BY DEADLINE -->
+    <div class="report-section">
+        <h3>Top 3 Tasks — Nearest Deadlines</h3>
+
+        {% if top_by_deadline %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Assignee</th>
+                    <th>Due date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for t in top_by_deadline %}
+                <tr class="click-row" data-href="{% url 'main_app:one_task' t.id %}">
+                    <td>{{ t.task_name }}</td>
+                    <td>{{ t.assignee.first_name }}</td>
+                    <td>{{ t.due_date|date:"d M Y" }}</td>
+                    <td>{{ t.status }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty">No tasks available.</p>
+        {% endif %}
+    </div>
+
+
+    <!-- TOP 3 BY PRIORITY -->
+    <div class="report-section">
+        <h3>Top 3 Tasks — Highest Priority</h3>
+
+        {% if top_by_priority %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Assignee</th>
+                    <th>Priority</th>
+                    <th>Due date</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for t in top_by_priority %}
+                <tr class="click-row" data-href="{% url 'main_app:one_task' t.id %}">
+                    <td>{{ t.task_name }}</td>
+                    <td>{{ t.assignee.first_name }}</td>
+                    <td>{{ t.priority }}</td>
+                    <td>{{ t.due_date|date:"d M Y" }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty">No tasks available.</p>
+        {% endif %}
+    </div>
+
+
+    <!-- OVERDUE TASKS -->
+    <div class="report-section">
+        <h3>Overdue Tasks</h3>
+
+        {% if overdue_tasks %}
+        <table class="report-table overdue-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Assignee</th>
+                    <th>Due date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for t in overdue_tasks %}
+                <tr class="click-row" data-href="{% url 'main_app:one_task' t.id %}">
+                    <td>{{ t.task_name }}</td>
+                    <td>{{ t.assignee.first_name }}</td>
+                    <td class="danger">{{ t.due_date|date:"d M Y" }}</td>
+                    <td>{{ t.status }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty">No overdue tasks 🎉</p>
+        {% endif %}
+    </div>
+
+
+    <!-- BACK -->
+    <div class="report-back">
+        <a href="{% url 'main_app:one_project' project.id %}">
+            <button class="button-12">Back to project</button>
+        </a>
+    </div>
+
+</div>
+
+
+
+<!-- =========================
+        PAGE STYLES
+========================= -->
+
+<style>
+
+.report-container {
+    padding: 20px;
+    width: 100%;
+}
+
+/* Header */
+.report-header {
+    margin-bottom: 25px;
+}
+
+.report-header h2 {
+    font-size: 26px;
+    margin-bottom: 5px;
+}
+
+/* Summary cards */
+.report-cards {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.report-card {
+    background: #f5f5f5;
+    padding: 18px 22px;
+    border-radius: 10px;
+    width: 180px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.report-card .label {
+    display: block;
+    font-size: 14px;
+    color: #555;
+}
+
+.report-card .value {
+    margin-top: 8px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #222;
+}
+
+/* Sections */
+.report-section {
+    margin-bottom: 40px;
+}
+
+.report-section h3 {
+    margin-bottom: 12px;
+    color: #333;
+}
+
+/* Table */
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.report-table th, .report-table td {
+    padding: 12px 15px;
+    font-size: 14px;
+    color: #444;
+    border-bottom: 1px solid #eee;
+}
+
+.report-table tr:hover {
+    background: #f1f7ff;
+    cursor: pointer;
+}
+
+.report-table .danger {
+    color: #d9534f;
+    font-weight: bold;
+}
+
+/* Empty text */
+.empty {
+    color: #777;
+    padding: 10px;
+}
+
+/* Back */
+.report-back {
+    margin-top: 30px;
+}
+
+</style>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".click-row").forEach(row => {
+        row.addEventListener("click", () => {
+            window.location = row.dataset.href;
+        });
+    });
+});
+</script>
+
+
+{% endblock %}

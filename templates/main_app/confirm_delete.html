@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .modal {
+  display: none; /* ховаємо за замовчуванням */
+  position: fixed;
+  z-index: 1000; /* поверх всіх елементів */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5); /* затемнення фону */
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 15% auto; /* по центру */
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  text-align: center;
+}
+    </style>
+</head>
+<body>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const modal = document.getElementById("confirmModal");
+    const confirmYes = document.getElementById("confirmYes");
+    const confirmNo = document.getElementById("confirmNo");
+    let formToSubmit = null;  // тут зберігатимемо форму
+
+    document.querySelectorAll(".delete-button").forEach(btn => {
+        btn.addEventListener("click", function(e) {
+            e.preventDefault();  // зупиняємо стандартну відправку форми
+            modal.style.display = "block";  // показуємо модалку
+            formToSubmit = btn.closest("form");  // зберігаємо конкретну форму
+        });
+    });
+
+    confirmNo.addEventListener("click", () => {
+        modal.style.display = "none"; // ховаємо модалку
+        formToSubmit = null; // очищаємо
+    });
+
+    confirmYes.addEventListener("click", () => {
+        if (formToSubmit) {
+            formToSubmit.submit(); // відправляємо саме ту форму
+        }
+        modal.style.display = "none";
+        formToSubmit = null;
+    });
+});
+
+</script>
+
+
+<div id="confirmModal" class="modal">
+  <div class="modal-content">
+    <p>Are you sure you want to delete this project?</p>
+    <button id="confirmYes">Yes</button>
+    <button id="confirmNo">No</button>
+  </div>
+</div>
+
+
+</body>
+</html>
