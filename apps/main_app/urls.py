@@ -2,12 +2,15 @@ from django.urls import path
 
 from .views import MyTasksListView, ProjectCreateView, TaskCreateView, UsersListView, UserTasksView, MainView, \
     ProjectDeleteView, ProjectsListView, TaskDeleteView, OneTaskDetailView, ProjectUpdateView, TaskUpdateView, \
-    OneProjectListView, TaskMarkDoneView, LeaveTaskView, ProjectReportView
+    OneProjectListView, TaskMarkDoneView, LeaveTaskView, ProjectReportView, SearchView, AddCommentView, DeleteCommentView, \
+    ProjectReportExcelView
 
 app_name = 'apps.main_app'
 
 urlpatterns = [
     path('', MainView.as_view(), name='main_page'),
+    
+    path('search/', SearchView.as_view(), name='search'),
 
     path('tasks/', MyTasksListView.as_view(), name='my_tasks'),
     path('tasks/create', TaskCreateView.as_view(), name='task_create'),
@@ -19,6 +22,9 @@ urlpatterns = [
     path('task/<int:task_id>/', OneTaskDetailView.as_view(), name='one_task'),
     
     path("task/<int:task_id>/leave/", LeaveTaskView.as_view(), name="task_leave"),
+    
+    path("task/<int:task_id>/comment/add/", AddCommentView.as_view(), name="add_comment"),
+    path("comment/<int:comment_id>/delete/", DeleteCommentView.as_view(), name="delete_comment"),
 
     path('projects/', ProjectsListView.as_view(), name='projects_view'),
     path('project/create', ProjectCreateView.as_view(), name='project_create'),
@@ -30,6 +36,11 @@ urlpatterns = [
     "project/<int:project_id>/report/",
     ProjectReportView.as_view(),
     name="project_report"),
+    
+    path(
+    "project/<int:project_id>/report/download/",
+    ProjectReportExcelView.as_view(),
+    name="project_report_excel"),
 
     path('users/', UsersListView.as_view(), name='users_list'),
     path('users/<int:user_id>', UserTasksView.as_view(), name='users_tasks')

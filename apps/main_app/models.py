@@ -50,6 +50,19 @@ class Task(models.Model):
     def __str__(self):
         return self.task_name
 
+class Comment(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Comment by {self.author.first_name} on {self.task.task_name}"
+
 @receiver(m2m_changed, sender=Project.tasks.through)
 def update_tasks_count(sender, instance, **kwargs):
     instance.task_count = instance.tasks.count()

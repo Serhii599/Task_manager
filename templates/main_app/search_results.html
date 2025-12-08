@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div style="padding: 20px; width: 100%;">
+    
+    <div style="margin-bottom: 30px;">
+        <h2 style="color: #374151; font-size: 24px; font-weight: 600;">
+            Search Results for "{{ query }}"
+        </h2>
+        <p style="color: #6b7280; margin-top: 8px;">
+            Found {{ total_results }} result{{ total_results|pluralize }}
+        </p>
+    </div>
+
+    {% if total_results == 0 %}
+        <div style="background: #f9fafb; padding: 40px; text-align: center; border-radius: 8px; color: #6b7280;">
+            <svg style="width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <p style="font-size: 16px; margin-bottom: 8px;">No results found</p>
+            <p style="font-size: 14px;">Try searching with different keywords</p>
+        </div>
+    {% else %}
+
+        <!-- Tasks Section -->
+        {% if tasks %}
+        <div style="margin-bottom: 40px;">
+            <h3 style="color: #374151; font-size: 18px; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 4px; font-size: 14px;">
+                    {{ tasks|length }}
+                </span>
+                Task{{ tasks|length|pluralize }}
+            </h3>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Assignee</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Due Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                        <tr class="task-row" data-href="{% url 'main_app:one_task' task.id %}" style="cursor: pointer;">
+                            <td>{{ task.task_name|truncatechars:50 }}</td>
+                            <td>{{ task.task_description|truncatechars:80 }}</td>
+                            <td>{{ task.assignee.first_name|default:"Unassigned" }}</td>
+                            <td>{{ task.status }}</td>
+                            <td>{{ task.priority }}</td>
+                            <td>{{ task.due_date|date:"d M Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Projects Section -->
+        {% if projects %}
+        <div style="margin-bottom: 40px;">
+            <h3 style="color: #374151; font-size: 18px; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 4px; font-size: 14px;">
+                    {{ projects|length }}
+                </span>
+                Project{{ projects|length|pluralize }}
+            </h3>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Tasks</th>
+                        <th>Creator</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                        <tr class="project-row" data-href="{% url 'main_app:one_project' project.id %}" style="cursor: pointer;">
+                            <td>{{ project.project_name|truncatechars:50 }}</td>
+                            <td>{{ project.project_description|truncatechars:80 }}</td>
+                            <td>{{ project.status }}</td>
+                            <td>{{ project.priority }}</td>
+                            <td>{{ project.task_count }}</td>
+                            <td>{{ project.creator.first_name|default:"—" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Users Section -->
+        {% if users %}
+        <div style="margin-bottom: 40px;">
+            <h3 style="color: #374151; font-size: 18px; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 4px; font-size: 14px;">
+                    {{ users|length }}
+                </span>
+                User{{ users|length|pluralize }}
+            </h3>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Email</th>
+                        <th>Tasks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr class="user-row" data-href="{% url 'main_app:users_tasks' user.id %}" style="cursor: pointer;">
+                            <td>{{ user.first_name }}</td>
+                            <td>{{ user.last_name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <button class="button-main" style="padding: 6px 12px; font-size: 13px;">View tasks</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    {% endif %}
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Task rows
+    document.querySelectorAll(".task-row").forEach(row => {
+        row.addEventListener("click", function(event) {
+            if (event.target.tagName.toLowerCase() === 'button') return;
+            window.location = row.dataset.href;
+        });
+    });
+    
+    // Project rows
+    document.querySelectorAll(".project-row").forEach(row => {
+        row.addEventListener("click", function(event) {
+            if (event.target.tagName.toLowerCase() === 'button') return;
+            window.location = row.dataset.href;
+        });
+    });
+    
+    // User rows
+    document.querySelectorAll(".user-row").forEach(row => {
+        row.addEventListener("click", function(event) {
+            if (event.target.tagName.toLowerCase() === 'button') return;
+            window.location = row.dataset.href;
+        });
+    });
+});
+</script>
+
+{% endblock %}

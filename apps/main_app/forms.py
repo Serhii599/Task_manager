@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from .models import Task, Project
+from .models import Task, Project, Comment
 from django import forms
 
 User = get_user_model()
@@ -33,3 +33,15 @@ class ProjectCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['tasks'].queryset = Task.objects.all()
         self.fields['collaborators'].queryset = User.objects.all()
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Write a comment...',
+                'class': 'comment-textarea',
+            }),
+        }

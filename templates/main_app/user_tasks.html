@@ -5,20 +5,92 @@
 
 {% block content %}
 
-<div class="user-tasks-wrapper">
+<div>
+<h2 style="margin-bottom: 20px">
+    Tasks assigned to 
+    <span style="color: #3b82f6; font-weight: 600;">
+        {{ user.first_name }} {{ user.last_name }}
+    </span>
+</h2>
 
-    <h2 class="user-tasks-title">
-        Tasks assigned to <span>{{ user.first_name }} {{ user.last_name }}</span>
-    </h2>
+<div class="filters-box">
+    <form method="get" id="filtersForm" style="margin-bottom:20px">
 
-    <table class="user-tasks-table">
+        <!-- STATUS -->
+        <select class="custom-select" name="status" onchange="filtersForm.submit()">
+            <option value="">All statuses</option>
+            <option value="Backlog"      {% if request.GET.status == "Backlog" %}selected{% endif %}>Backlog</option>
+            <option value="To do"        {% if request.GET.status == "To do" %}selected{% endif %}>To do</option>
+            <option value="In progress"  {% if request.GET.status == "In progress" %}selected{% endif %}>In progress</option>
+            <option value="Done"         {% if request.GET.status == "Done" %}selected{% endif %}>Done</option>
+        </select>
+
+        <!-- PRIORITY -->
+        <select class="custom-select" name="priority" onchange="filtersForm.submit()">
+            <option value="">All priorities</option>
+            <option value="Low"     {% if request.GET.priority == "Low" %}selected{% endif %}>Low</option>
+            <option value="Medium"  {% if request.GET.priority == "Medium" %}selected{% endif %}>Medium</option>
+            <option value="High"    {% if request.GET.priority == "High" %}selected{% endif %}>High</option>
+            <option value="Urgent"  {% if request.GET.priority == "Urgent" %}selected{% endif %}>Urgent</option>
+        </select>
+
+        <!-- ASSIGNEE -->
+        <select class="custom-select" name="assignee" onchange="filtersForm.submit()">
+            <option value="">All assignees</option>
+            {% for user in assignees %}
+                <option value="{{ user.id }}" {% if request.GET.assignee == user.id|stringformat:'s' %}selected{% endif %}>
+                    {{ user.first_name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <a href="{% url 'main_app:users_tasks' user.id %}" class="btn-main2" style="font-size: 12px">Clear all filters</a>
+    </form>
+
+</div>
+
+<div class="sort-bar" style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+
+    {% for col in sort_columns %}
+    <form method="get" class="sort-form">
+        {% for key,val in request.GET.items %}
+            {% if key != "sort" and key != "order" %}
+                <input type="hidden" name="{{ key }}" value="{{ val }}">
+            {% endif %}
+        {% endfor %}
+
+        <select name="order" class="sort-select" onchange="this.form.submit()">
+            <option value="">Sort by {{ col.label }}</option>
+
+            <option value="asc"
+                {% if request.GET.sort == col.field and request.GET.order == "asc" %}
+                    selected
+                {% endif %}
+            >
+                ↑ {{ col.label }} (ASC)
+            </option>
+
+            <option value="desc"
+                {% if request.GET.sort == col.field and request.GET.order == "desc" %}
+                    selected
+                {% endif %}
+            >
+                ↓ {{ col.label }} (DESC)
+            </option>
+        </select>
+
+        <input type="hidden" name="sort" value="{{ col.field }}">
+    </form>
+    {% endfor %}
+
+</div>
+
+    <table>
         <thead>
         <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th>Priority</th>
-            <th>Due date</th>
+            {% for col in sort_columns %}
+                <th>{{ col.label }}</th>
+            {% endfor %}
         </tr>
         </thead>
 
@@ -26,14 +98,15 @@
         {% for task in tasks %}
             <tr class="task-row" data-href="{% url 'main_app:one_task' task.id %}">
                 <td>{{ task.task_name }}</td>
-                <td>{{ task.task_description }}</td>
+                <td>{{ task.task_description|truncatechars:100 }}</td>
                 <td>{{ task.status }}</td>
                 <td>{{ task.priority }}</td>
-                <td>{{ task.due_date|date:"d M" }}</td>
+                <td>{{ task.due_date|date:"d M Y" }}</td>
+                <td>{{ task.created_at|date:"d M Y" }}</td>
             </tr>
         {% empty %}
             <tr>
-                <td colspan="5" style="text-align:center; color:#666; padding: 25px;">
+                <td colspan="6" style="text-align:center; color:#666; padding: 25px;">
                     No tasks assigned.
                 </td>
             </tr>
@@ -42,89 +115,11 @@
     </table>
 
     <a href="{% url 'main_app:users_list' %}">
-        <button class="btn-back-users">Back to users</button>
+        <button class="btn-main2">Back to users</button>
     </a>
 
 </div>
 
-
-<style>
-
-/* Wrapper */
-.user-tasks-wrapper {
-    padding: 20px;
-}
-
-.user-tasks-title {
-    font-size: 22px;
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.user-tasks-title span {
-    color: #3b82f6;
-    font-weight: 600;
-}
-
-/* Styled table */
-.user-tasks-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    font-family: 'Segoe UI', Roboto, sans-serif;
-}
-
-.user-tasks-table th {
-    background: #f4f6f8;
-    padding: 12px 16px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: #333;
-    border-bottom: 2px solid #e0e4e8;
-}
-
-.user-tasks-table td {
-    padding: 12px 16px;
-    color: #555;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.user-tasks-table tr:nth-child(even) {
-    background-color: #fafafa;
-}
-
-/* Hover rows */
-.task-row {
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.task-row:hover {
-    background-color: #f1f7ff;
-}
-
-/* Button Back */
-.btn-back-users {
-    margin-top: 20px;
-    padding: 10px 16px;
-    background: #e5e5e5;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-}
-
-.btn-back-users:hover {
-    background: #d3d3d3;
-    transform: translateY(-1px);
-}
-
-</style>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

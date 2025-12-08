@@ -1,11 +1,98 @@
 {% extends "base.html" %}
-{% block title %}My tasks table{% endblock %}
+{% block title %}Create New Project{% endblock %}
+
 {% block content %}
-    <div>
-      <form method="post" action="{% url 'main_app:project_create' %}">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Create</button>
-      </form>
+<div class="edit-page">
+    <div class="edit-box" style="width: 600px;">
+        <h2>Create New Project</h2>
+        
+        <form method="post" action="{% url 'main_app:project_create' %}">
+            {% csrf_token %}
+            
+            <!-- Project Name -->
+            <p>
+                <label for="id_project_name" style="font-weight: 500; margin-bottom: 6px;">Project Name *</label>
+                {{ form.project_name }}
+                {% if form.project_name.errors %}
+                    <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.project_name.errors.0 }}</span>
+                {% endif %}
+            </p>
+
+            <!-- Project Description -->
+            <p>
+                <label for="id_project_description" style="font-weight: 500; margin-bottom: 6px;">Description *</label>
+                {{ form.project_description }}
+                {% if form.project_description.errors %}
+                    <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.project_description.errors.0 }}</span>
+                {% endif %}
+            </p>
+
+            <!-- Status and Priority (side by side) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 18px;">
+                <div style="display: flex; flex-direction: column;">
+                    <label for="id_status" style="font-weight: 500; margin-bottom: 6px; font-size: 15px; color: #4b5563;">Status *</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.status.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div style="display: flex; flex-direction: column;">
+                    <label for="id_priority" style="font-weight: 500; margin-bottom: 6px; font-size: 15px; color: #4b5563;">Priority *</label>
+                    {{ form.priority }}
+                    {% if form.priority.errors %}
+                        <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.priority.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tasks -->
+            <p>
+                <label for="id_tasks" style="font-weight: 500; margin-bottom: 6px;">Tasks</label>
+                {{ form.tasks }}
+                <span style="font-size: 12px; color: #6b7280; margin-top: 4px;">Hold Ctrl/Cmd to select multiple tasks</span>
+                {% if form.tasks.errors %}
+                    <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.tasks.errors.0 }}</span>
+                {% endif %}
+            </p>
+
+            <!-- Collaborators -->
+            <p>
+                <label for="id_collaborators" style="font-weight: 500; margin-bottom: 6px;">Collaborators</label>
+                {{ form.collaborators }}
+                <span style="font-size: 12px; color: #6b7280; margin-top: 4px;">Hold Ctrl/Cmd to select multiple collaborators</span>
+                {% if form.collaborators.errors %}
+                    <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.collaborators.errors.0 }}</span>
+                {% endif %}
+            </p>
+
+            <!-- General Form Errors -->
+            {% if form.non_field_errors %}
+                <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 14px;">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Buttons -->
+            <div style="display: flex; gap: 12px; margin-top: 25px;">
+                <button type="submit" class="button-main" style="flex: 1;">Create Project</button>
+                <a href="{% url 'main_app:projects_view' %}" style="flex: 1;">
+                    <button type="button" class="btn-main2" style="width: 100%;">Cancel</button>
+                </a>
+            </div>
+        </form>
     </div>
+</div>
+
+<style>
+    .edit-box textarea {
+        min-height: 100px;
+        resize: vertical;
+        font-family: inherit;
+    }
+    
+    .edit-box select[multiple] {
+        min-height: 120px;
+    }
+</style>
 {% endblock %}

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 {% block title %}Task: {{ task.task_name }}{% endblock %}
 
 {% block content %}
@@ -9,17 +8,28 @@
     <div class="task-left">
         <h3>Other tasks of {{ task.assignee.first_name }}</h3>
 
-      <div class="other-tasks-list">
-          {% for t in other_tasks %}
-              <div class="other-task-item"
-                  data-href="{% url 'main_app:one_task' t.id %}">
-                  <span>{{ t.task_name }}</span>
-                  <span class="due-date">{{ t.due_date|date:"d M" }}</span>
-              </div>
-          {% empty %}
-              <p>No other tasks</p>
-          {% endfor %}
-      </div>
+        <table style="width: 100%; font-size: 13px;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Due date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in other_tasks %}
+                    <tr class="task-row" data-href="{% url 'main_app:one_task' t.id %}" style="cursor: pointer;">
+                        <td style="padding: 10px 8px;">{{ t.task_name|truncatechars:40 }}</td>
+                        <td style="padding: 10px 8px;">{{ t.due_date|date:"d M Y" }}</td>
+                        <td style="padding: 10px 8px;">{{ t.status }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" style="text-align:center; padding: 15px; color: #999;">No other tasks</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <!-- Middle column (task content) -->
@@ -49,14 +59,14 @@
         {% endif %}
 
         <a href="{% url 'main_app:task_edit' task.id %}">
-            <button class="btn-edit" style="width:100%; margin-bottom:10px;">
+            <button class="btn-main2" style="width:100%; margin-bottom:10px;">
                 Edit task
             </button>
         </a>
 
         <form  method="post" action="{% url 'main_app:task_delete' task.id %}">
             {% csrf_token %}
-            <button class="button-24" style="width:100%; margin-bottom:20px;">
+            <button class="button-delete" style="width:100%; margin-bottom:20px;">
                 Delete task
             </button>
         </form>
@@ -103,138 +113,123 @@
 
         <form action="{% url 'main_app:task_leave' task.id %}" method="post" style="margin-top:20px;">
             {% csrf_token %}
-            <button class="button-12" style="width:100%;">Leave task</button>
+            <button class="button-main" style="width:100%;">Leave task</button>
         </form>
 
     </div>
 </div>
 
+<!-- Comments Section -->
+<div style="padding: 0 20px 40px 20px; max-width: 1200px; margin: 0 auto;">
+    <div style="background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <h3 style="font-size: 20px; font-weight: 600; color: #374151; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Comments ({{ comments.count }})
+        </h3>
+
+        {% if is_collaborator %}
+            <!-- Add Comment Form -->
+            <form method="post" action="{% url 'main_app:add_comment' task.id %}" style="margin-bottom: 30px;">
+                {% csrf_token %}
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    {{ comment_form.content }}
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button type="submit" class="button-main" style="padding: 10px 20px; font-size: 14px;">
+                            Post Comment
+                        </button>
+                    </div>
+                </div>
+            </form>
+        {% else %}
+            <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px; color: #92400e; font-size: 14px;">
+                Only collaborators, assignees, and creators can comment on this task.
+            </div>
+        {% endif %}
+
+        <!-- Comments List -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            {% for comment in comments %}
+                <div style="background: #f9fafb; border-radius: 8px; padding: 16px; border-left: 3px solid #4f79ff;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: #4f79ff; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;">
+                                {% if comment.author.first_name %}
+                                    {{ comment.author.first_name|first|upper }}
+                                {% else %}
+                                    {{ comment.author.username|first|upper }}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: #374151; font-size: 14px;">
+                                    {% if comment.author.first_name and comment.author.last_name %}
+                                        {{ comment.author.first_name }} {{ comment.author.last_name }}
+                                    {% else %}
+                                        {{ comment.author.username }}
+                                    {% endif %}
+                                </div>
+                                <div style="color: #6b7280; font-size: 12px;">
+                                    {{ comment.created_at|date:"M d, Y • H:i" }}
+                                    {% if comment.updated_at != comment.created_at %}
+                                        <span style="font-style: italic;">(edited)</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if comment.author == user %}
+                            <form method="post" action="{% url 'main_app:delete_comment' comment.id %}" onsubmit="return confirm('Are you sure you want to delete this comment?');">
+                                {% csrf_token %}
+                                <button type="submit" class="button-delete" style="padding: 4px 10px; font-size: 12px;">
+                                    Delete
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    
+                    <div style="color: #4b5563; line-height: 1.6; font-size: 14px; white-space: pre-wrap;">
+                        {{ comment.content }}
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; padding: 40px; color: #9ca3af;">
+                    <svg style="width: 48px; height: 48px; margin: 0 auto 12px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                    <p style="font-size: 15px;">No comments yet. Be the first to comment!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 <style>
-/* Page layout */
-.task-page {
-    display: grid;
-    grid-template-columns: 260px 1fr 320px;
-    gap: 30px;
-    padding: 20px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* Left column */
-.task-left h3 {
-    margin-bottom: 10px;
-    font-weight: bold;
-    color: #333;
-}
-
-.other-task-item {
-    background: #f5f5f5;
-    padding: 8px 12px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    color: #333;
-    font-size: 14px;
-}
-
-.other-task-item .due-date {
-    color: #666;
-}
-
-/* Middle column */
-.task-title {
-    font-size: 22px;
-    padding: 12px;
-    background: #4a5565ff;
-    color: white;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.task-description-box {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.task-description {
-    margin-top: 10px;
-    color: #444;
-}
-
-/* Right column */
-.task-right {
-    background: #f5f5f5;
-    padding: 20px;
-    border-radius: 12px;
-}
-
-.task-info-box {
-    background: white;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-}
-
-.task-info-box ul {
-    padding-left: 20px;
-}
-
-.btn-done {
-    width: 100%;
-    padding: 10px 14px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 15px;
-    background-color: #77dd77; /* зелений */
-    color: #1a1a1a;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-}
-
-.btn-done:hover {
-    background-color: #6ad06a;
-    transform: translateY(-1px);
-}
-
-.btn-done:active {
-    background-color: #5cb95c;
-    transform: translateY(0);
-}
-.btn-edit {
-    width: 100%;
-    padding: 10px 14px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 15px;
-    background-color: #e5e5e5;
-    color: #333;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-}
-
-.btn-edit:hover {
-    background-color: #d4d4d4;
-    transform: translateY(-1px);
-}
-
-.btn-edit:active {
-    background-color: #c9c9c9;
-    transform: translateY(0);
-}
-
+    .comment-textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        background: #ffffff;
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .comment-textarea:focus {
+        outline: none;
+        border-color: #4f79ff;
+        box-shadow: 0 0 0 3px rgba(79, 121, 255, 0.1);
+    }
 </style>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".other-task-item").forEach(item => {
-        item.addEventListener("click", () => {
-            window.location = item.dataset.href;
+    document.querySelectorAll(".task-left .task-row").forEach(row => {
+        row.addEventListener("click", function(event) {
+            if (event.target.tagName.toLowerCase() === 'button' || event.target.closest('form')) return;
+            window.location = row.dataset.href;
         });
     });
 });

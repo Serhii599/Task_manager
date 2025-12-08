@@ -1,330 +1,224 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block title %}Project: {{ project.project_name }}{% endblock %}
 
 {% block content %}
 
-<div class="project-page">
+<div style="display: flex; gap: 30px; padding: 20px; width: 100%;">
 
-    <!-- LEFT: tasks in this project -->
-    <div class="project-left">
-
-        <h3>Tasks in project</h3>
+    <!-- LEFT: Full table with tasks -->
+    <div style="flex: 1; display: flex; flex-direction: column;">
 
         <!-- FILTERS -->
-        <form method="get" id="filtersForm" class="project-filters">
+        <div class="filters-box">
+            <form method="get" id="filtersForm" style="margin-bottom:20px">
 
-            <select name="status" onchange="document.getElementById('filtersForm').submit()">
-                <option value="">All statuses</option>
-                <option value="Backlog"      {% if request.GET.status == "Backlog" %}selected{% endif %}>Backlog</option>
-                <option value="To do"        {% if request.GET.status == "To do" %}selected{% endif %}>To do</option>
-                <option value="In progress"  {% if request.GET.status == "In progress" %}selected{% endif %}>In progress</option>
-                <option value="Done"         {% if request.GET.status == "Done" %}selected{% endif %}>Done</option>
-            </select>
+                <!-- STATUS -->
+                <select class="custom-select" name="status" onchange="filtersForm.submit()">
+                    <option value="">All statuses</option>
+                    <option value="Backlog"      {% if request.GET.status == "Backlog" %}selected{% endif %}>Backlog</option>
+                    <option value="To do"        {% if request.GET.status == "To do" %}selected{% endif %}>To do</option>
+                    <option value="In progress"  {% if request.GET.status == "In progress" %}selected{% endif %}>In progress</option>
+                    <option value="Done"         {% if request.GET.status == "Done" %}selected{% endif %}>Done</option>
+                </select>
 
-            <select name="priority" onchange="document.getElementById('filtersForm').submit()">
-                <option value="">All priorities</option>
-                <option value="Low"     {% if request.GET.priority == "Low" %}selected{% endif %}>Low</option>
-                <option value="Medium"  {% if request.GET.priority == "Medium" %}selected{% endif %}>Medium</option>
-                <option value="High"    {% if request.GET.priority == "High" %}selected{% endif %}>High</option>
-                <option value="Urgent"  {% if request.GET.priority == "Urgent" %}selected{% endif %}>Urgent</option>
-            </select>
+                <!-- PRIORITY -->
+                <select class="custom-select" name="priority" onchange="filtersForm.submit()">
+                    <option value="">All priorities</option>
+                    <option value="Low"     {% if request.GET.priority == "Low" %}selected{% endif %}>Low</option>
+                    <option value="Medium"  {% if request.GET.priority == "Medium" %}selected{% endif %}>Medium</option>
+                    <option value="High"    {% if request.GET.priority == "High" %}selected{% endif %}>High</option>
+                    <option value="Urgent"  {% if request.GET.priority == "Urgent" %}selected{% endif %}>Urgent</option>
+                </select>
 
-        </form>
+                <!-- ASSIGNEE -->
+                <select class="custom-select" name="assignee" onchange="filtersForm.submit()">
+                    <option value="">All assignees</option>
+                    {% for user in assignees %}
+                        <option value="{{ user.id }}" {% if request.GET.assignee == user.id|stringformat:'s' %}selected{% endif %}>
+                            {{ user.first_name }}
+                        </option>
+                    {% endfor %}
+                </select>
 
-        <div class="sort-buttons">
-
-            <a href="?sort=task_name{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
-                Sort by name
-            </a>
-
-            <a href="?sort=due_date{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
-                Sort by deadline
-            </a>
-
-            <a href="?sort=status{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
-                Sort by status
-            </a>
-
-            <a href="?sort=priority{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">
-                Sort by priority
-            </a>
+                <a href="?">Clear filters</a>
+            </form>
 
         </div>
 
-        <!-- TASK LIST -->
-        <div class="project-tasks-list">
-            {% for task in tasks %}
-                <div class="project-task-item" data-href="{% url 'main_app:one_task' task.id %}">
-                    <span>{{ task.task_name }}</span>
-                    <span class="due-date">{{ task.due_date|date:"d M" }}</span>
-                    <span class="due-date">{{ task.assignee.first_name }}</span>
-                    <span class="due-date">{{ task.status }}</span>
-                    <span class="due-date">{{ task.priority }}</span>
-                    <span class="center-button">
-                        <form method="post" action="{% url 'main_app:task_delete' task.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="button-24">X</button>
-                        </form>
-                    </span>
-                </div>
-            {% empty %}
-                <p>No tasks in this project</p>
+        <!-- SORT BAR -->
+        <div class="sort-bar" style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+
+            {% for col in sort_columns %}
+            <form method="get" class="sort-form">
+                {% for key,val in request.GET.items %}
+                    {% if key != "sort" and key != "order" %}
+                        <input type="hidden" name="{{ key }}" value="{{ val }}">
+                    {% endif %}
+                {% endfor %}
+
+                <select name="order" class="sort-select" onchange="this.form.submit()">
+                    <option value="">Sort by {{ col.label }}</option>
+
+                    <option value="asc"
+                        {% if request.GET.sort == col.field and request.GET.order == "asc" %}
+                            selected
+                        {% endif %}
+                    >
+                        ↑ {{ col.label }} (ASC)
+                    </option>
+
+                    <option value="desc"
+                        {% if request.GET.sort == col.field and request.GET.order == "desc" %}
+                            selected
+                        {% endif %}
+                    >
+                        ↓ {{ col.label }} (DESC)
+                    </option>
+                </select>
+
+                <input type="hidden" name="sort" value="{{ col.field }}">
+            </form>
             {% endfor %}
+
         </div>
+
+        <!-- TASKS TABLE -->
+        <table>
+            <thead>
+                <tr>
+                    {% for col in sort_columns %}
+                        <th>{{ col.label }}</th>
+                    {% endfor %}
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                    <tr class="task-row" data-href="{% url 'main_app:one_task' task.id %}">
+                        <td>{{ task.task_name|truncatechars:100 }}</td>
+                        <td>{{ task.due_date|date:"d M Y" }}</td>
+                        <td>{{ task.assignee.first_name|default:"Unassigned" }}</td>
+                        <td>{{ task.status }}</td>
+                        <td>{{ task.priority }}</td>
+                        <td class="center-button">
+                            <form method="post" action="{% url 'main_app:task_delete' task.id %}" onclick="event.stopPropagation();">
+                                {% csrf_token %}
+                                <button type="submit" class="button-delete">X</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; color:#999; padding: 40px;">
+                            No tasks in this project
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-    <!-- CENTER: project info -->
-    <div class="project-center">
+    <!-- RIGHT: Project Info Sidebar -->
+    <div style="width: 280px; display: flex; flex-direction: column;">
 
-        <div class="project-title">
+        <!-- PROJECT TITLE CARD -->
+        <div class="project-title" style="margin-bottom: 20px;">
             {{ project.project_name }}
         </div>
 
-        <div class="project-description-box">
-            <h4>Description</h4>
-            <p class="project-description">
+        <!-- PROJECT DESCRIPTION -->
+        <div class="project-description-box" style="margin-bottom: 20px; flex: 1;">
+            <h4 style="font-weight: 600; color: #374151; margin-bottom: 10px;">Description</h4>
+            <p class="project-description" style="font-size: 14px; line-height: 1.5;">
                 {% if project.project_description %}
                     {{ project.project_description|linebreaks }}
                 {% else %}
-                    <i>No description provided.</i>
+                    <i style="color: #999;">No description provided.</i>
                 {% endif %}
             </p>
         </div>
 
-    </div>
-
-    <!-- RIGHT: actions + meta -->
-    <div class="project-right">
-
-        <a href="{% url 'main_app:project_edit' project.id %}">
-            <button class="btn-edit">Edit project</button>
-        </a>
-
-        <form action="{% url 'main_app:project_delete' project.id %}" method="post">
-            {% csrf_token %}
-            <button class="button-24" style="width:100%; margin-bottom:20px; margin-top:10px;">Delete project</button>
-        </form>
-
-
-        <!-- NEW BUTTON — GENERATE REPORT -->
-        <a href="{% url 'main_app:project_report' project.id %}">
-            <button class="btn-report">Generate report</button>
-        </a>
-
-        <div class="project-meta">
+        <!-- PROJECT INFO -->
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
 
             <div class="project-info-box">
-                <strong>Creator:</strong> {{ project.creator.first_name }}
+                <strong style="color: #374151;">Status</strong>
+                <div style="margin-top: 6px; color: #4b5563; font-size: 14px;">
+                    {{ project.status }}
+                </div>
             </div>
 
             <div class="project-info-box">
-                <strong>Total tasks:</strong> {{ project.tasks.count }}
+                <strong style="color: #374151;">Priority</strong>
+                <div style="margin-top: 6px; color: #4b5563; font-size: 14px;">
+                    {{ project.priority }}
+                </div>
             </div>
 
             <div class="project-info-box">
-                <strong>Collaborators:</strong>
-                <ul>
-                    {% for u in project.collaborators.all %}
-                        <li>{{ u.first_name }}</li>
-                    {% empty %}
-                        <li>No collaborators</li>
-                    {% endfor %}
-                </ul>
-            </div>
-
-        </div>
-
-        <a href="{% url 'main_app:projects_view' %}">
-            <button class="button-12" style="width:100%;margin-top:20px;">Back to projects</button>
-        </a>
-
-      </div>
-
-        <div class="project-meta">
-
-            <div class="project-info-box">
-                <strong>Creator:</strong> {{ project.creator.first_name }}
+                <strong style="color: #374151;">Total tasks</strong>
+                <div style="margin-top: 6px; color: #4b5563; font-size: 14px;">
+                    {{ project.tasks.count }}
+                </div>
             </div>
 
             <div class="project-info-box">
-                <strong>Total tasks:</strong> {{ project.tasks.count }}
+                <strong style="color: #374151;">Creator</strong>
+                <div style="margin-top: 6px; color: #4b5563; font-size: 14px;">
+                    {{ project.creator.first_name }}
+                </div>
             </div>
 
             <div class="project-info-box">
-                <strong>Collaborators:</strong>
-                <ul>
-                    {% for u in project.collaborators.all %}
-                        <li>{{ u.first_name }}</li>
-                    {% empty %}
-                        <li>No collaborators</li>
-                    {% endfor %}
-                </ul>
+                <strong style="color: #374151;">Collaborators</strong>
+                <div style="margin-top: 6px; color: #4b5563; font-size: 14px;">
+                    {% if project.collaborators.all %}
+                        <ul style="margin: 0; padding-left: 18px;">
+                            {% for u in project.collaborators.all %}
+                                <li>{{ u.first_name }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <i style="color: #999;">No collaborators</i>
+                    {% endif %}
+                </div>
             </div>
 
         </div>
 
-        <a href="{% url 'main_app:projects_view' %}">
-            <button class="button-12" style="width:100%;margin-top:20px;">Back to projects</button>
-        </a>
+        <!-- ACTION BUTTONS -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+
+            <a href="{% url 'main_app:project_edit' project.id %}" style="width: 100%;">
+                <button class="btn-main2" style="width:100%; font-size: 14px;">Edit project</button>
+            </a>
+
+            <a href="{% url 'main_app:project_report' project.id %}" style="width: 100%;">
+                <button class="button-main" style="width:100%; font-size: 14px;">Generate report</button>
+            </a>
+
+            <form action="{% url 'main_app:project_delete' project.id %}" method="post" style="width: 100%;">
+                {% csrf_token %}
+                <button type="submit" class="button-delete" style="width:100%; font-size: 14px; padding: 10px;">Delete project</button>
+            </form>
+
+            <a href="{% url 'main_app:projects_view' %}" style="width: 100%;">
+                <button class="button-main" style="width:100%; font-size: 14px;">Back to projects</button>
+            </a>
+
+        </div>
 
     </div>
 
 </div>
 
-
-<style>
-/* Grid layout */
-.project-page {
-    display: grid;
-    grid-template-columns: 25vw 25vw 15vw;
-    gap: 30px;
-    padding: 20px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* LEFT COLUMN */
-.project-left h3 {
-    margin-bottom: 10px;
-    font-weight: bold;
-    color: #333;
-}
-
-.project-task-item {
-    background: #f5f5f5;
-    padding: 10px 12px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    color: #333;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.project-task-item:hover {
-    background: #e8e8e8;
-}
-
-.project-task-item .due-date {
-    color: #666;
-}
-
-/* CENTER COLUMN */
-.project-title {
-    font-size: 22px;
-    padding: 12px;
-    background: #3b82f6;
-    color: white;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.project-description-box {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.project-description {
-    margin-top: 10px;
-    color: #444;
-}
-
-/* RIGHT COLUMN */
-.project-right {
-    background: #f5f5f5;
-    padding: 20px;
-    border-radius: 12px;
-}
-
-.project-info-box {
-    background: white;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-}
-
-.project-info-box ul {
-    padding-left: 20px;
-}
-
-.btn-done {
-    width: 100%;
-    padding: 10px 14px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 15px;
-    background-color: #77dd77; /* зелений */
-    color: #1a1a1a;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-}
-
-.btn-done:hover {
-    background-color: #6ad06a;
-    transform: translateY(-1px);
-}
-
-.btn-done:active {
-    background-color: #5cb95c;
-    transform: translateY(0);
-}
-.btn-edit {
-    width: 100%;
-    padding: 10px 14px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 15px;
-    background-color: #e5e5e5;
-    color: #333;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-}
-
-.btn-edit:hover {
-    background-color: #d4d4d4;
-    transform: translateY(-1px);
-}
-
-.btn-edit:active {
-    background-color: #c9c9c9;
-    transform: translateY(0);
-}
-.project-filters select {
-    padding: 8px;
-    margin-bottom: 12px;
-}
-
-.sort-buttons a {
-    display: inline-block;
-    padding: 4px 8px;
-    margin-right: 8px;
-    font-size: 12px;
-    color: #333;
-    background: #eee;
-    border-radius: 6px;
-    text-decoration: none;
-}
-
-.sort-buttons a:hover {
-    background: #ddd;
-}
-</style>
-
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".project-task-item").forEach(item => {
-        item.addEventListener("click", () => {
-            window.location = item.dataset.href;
+    document.querySelectorAll(".task-row").forEach(row => {
+        row.addEventListener("click", function(event) {
+            if (event.target.tagName.toLowerCase() === 'button' || event.target.closest('form')) return;
+            window.location = row.dataset.href;
         });
     });
 });

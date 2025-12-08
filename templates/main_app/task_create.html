@@ -1,11 +1,106 @@
 {% extends "base.html" %}
-{% block title %}My tasks table{% endblock %}
+{% block title %}Create New Task{% endblock %}
+
 {% block content %}
-    <div>
-      <form method="post" action="{% url 'main_app:task_create' %}">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Create</button>
-      </form>
+<div class="edit-page">
+    <div class="edit-box" style="width: 600px;">
+        <h2>Create New Task</h2>
+        
+        <form method="post" action="{% url 'main_app:task_create' %}">
+            {% csrf_token %}
+            
+            <!-- Task Name -->
+            <p>
+                <label for="id_task_name" style="font-weight: 500; margin-bottom: 6px;">Task Name *</label>
+                {{ form.task_name }}
+                {% if form.task_name.errors %}
+                    <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.task_name.errors.0 }}</span>
+                {% endif %}
+            </p>
+
+            <!-- Task Description -->
+            <p>
+                <label for="id_task_description" style="font-weight: 500; margin-bottom: 6px;">Description</label>
+                {{ form.task_description }}
+                {% if form.task_description.errors %}
+                    <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.task_description.errors.0 }}</span>
+                {% endif %}
+            </p>
+
+            <!-- Status and Priority (side by side) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 18px;">
+                <div style="display: flex; flex-direction: column;">
+                    <label for="id_status" style="font-weight: 500; margin-bottom: 6px; font-size: 15px; color: #4b5563;">Status *</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.status.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div style="display: flex; flex-direction: column;">
+                    <label for="id_priority" style="font-weight: 500; margin-bottom: 6px; font-size: 15px; color: #4b5563;">Priority *</label>
+                    {{ form.priority }}
+                    {% if form.priority.errors %}
+                        <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.priority.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Assignee -->
+            <p>
+                <label for="id_assignee" style="font-weight: 500; margin-bottom: 6px;">Assignee</label>
+                {{ form.assignee }}
+                {% if form.assignee.errors %}
+                    <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.assignee.errors.0 }}</span>
+                {% endif %}
+            </p>
+
+            <!-- Due Date -->
+            <p>
+                <label for="id_due_date" style="font-weight: 500; margin-bottom: 6px;">Due Date *</label>
+                {{ form.due_date }}
+                {% if form.due_date.errors %}
+                    <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.due_date.errors.0 }}</span>
+                {% endif %}
+            </p>
+
+            <!-- Collaborators -->
+            <p>
+                <label for="id_collaborators" style="font-weight: 500; margin-bottom: 6px;">Collaborators</label>
+                {{ form.collaborators }}
+                <span style="font-size: 12px; color: #6b7280; margin-top: 4px;">Hold Ctrl/Cmd to select multiple</span>
+                {% if form.collaborators.errors %}
+                    <span style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.collaborators.errors.0 }}</span>
+                {% endif %}
+            </p>
+
+            <!-- General Form Errors -->
+            {% if form.non_field_errors %}
+                <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 14px;">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Buttons -->
+            <div style="display: flex; gap: 12px; margin-top: 25px;">
+                <button type="submit" class="button-main" style="flex: 1;">Create Task</button>
+                <a href="{% url 'main_app:my_tasks' %}" style="flex: 1; width: 100%;">
+                    <button type="button" class="btn-main2" style="width: 100%;">Cancel</button>
+                </a>
+            </div>
+        </form>
     </div>
+</div>
+
+<style>
+    .edit-box textarea {
+        min-height: 100px;
+        resize: vertical;
+        font-family: inherit;
+    }
+    
+    .edit-box select[multiple] {
+        min-height: 120px;
+    }
+</style>
 {% endblock %}
