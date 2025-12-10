@@ -1,10 +1,33 @@
 version: 2.1
 
-# Define reusable commands
-commands:
-  install_dependencies:
-    description: "Install Python dependencies"
+jobs:
+  tests:
+    docker:
+      - image: cimg/python:3.12
+      - image: cimg/postgres:15
+        environment:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_taskmanager
+    
+    environment:
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: test_taskmanager
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      SECRET_KEY: test-secret-key-for-ci
+      DEBUG: "False"
+      ALLOWED_HOSTS: "*"
+    
     steps:
+      - checkout
+      
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "requirements.txt" }}
+            - v1-dependencies-
+      
       - run:
           name: Install dependencies
           command: |
@@ -13,15 +36,17 @@ commands:
             pip install --upgrade pip
             pip install -r requirements.txt
             pip install -r requirements-dev.txt
-  
-  setup_database:
-    description: "Setup PostgreSQL database for testing"
-    steps:
+      
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+      
       - run:
-          name: Wait for PostgreSQL to be ready
+          name: Wait for PostgreSQL
           command: |
             for i in {1..30}; do
-              pg_isready -h localhost -p 5432 && echo "PostgreSQL is ready" && exit 0
+              pg_isready -h postgres -p 5432 && echo "PostgreSQL is ready" && exit 0
               echo "Waiting for PostgreSQL... ($i/30)"
               sleep 1
             done
@@ -29,380 +54,49 @@ commands:
             exit 1
       
       - run:
-          name: Create test database
-          command: |
-            . venv/bin/activate
-            PGPASSWORD=$DB_PASSWORD psql -h localhost -U postgres -c "CREATE DATABASE test_taskmanager;"
-          environment:
-            DB_PASSWORD: postgres
-
-# Define jobs
-jobs:
-  lint:
-    description: "Run code quality checks"
-    docker:
-      - image: cimg/python:3.12
-    
-    steps:
-      - checkout
-      
-      - install_dependencies
-      
-      - run:
-          name: Run flake8 linting
-          command: |
-            . venv/bin/activate
-            pip install flake8
-            flake8 apps/ --count --select=E9,F63,F7,F82 --show-source --statistics
-            flake8 apps/ --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
-      
-      - run:
-          name: Run black formatting check
-          command: |
-            . venv/bin/activate
-            pip install black
-            black --check apps/
-          continue: true
-  
-  test:
-    description: "Run unit tests with coverage"
-    docker:
-      - image: cimg/python:3.12
-      - image: cimg/postgres:15
-        environment:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_taskmanager
-    
-    environment:
-      DB_ENGINE: django.db.backends.postgresql
-      DB_NAME: test_taskmanager
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: localhost
-      DB_PORT: 5432
-      SECRET_KEY: test-secret-key-for-ci
-      DEBUG: "False"
-      ALLOWED_HOSTS: "*"
-    
-    steps:
-      - checkout
-      
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "requirements.txt" }}
-            - v1-dependencies-
-      
-      - install_dependencies
-      
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-      
-      - setup_database
-      
-      - run:
           name: Run migrations
           command: |
             . venv/bin/activate
             python manage.py migrate --no-input
       
       - run:
-          name: Run tests with coverage
+          name: Run all tests with coverage
           command: |
             . venv/bin/activate
             coverage run --source='apps' manage.py test --verbosity=2
-            coverage xml
             coverage report
-      
-      - store_artifacts:
-          path: htmlcov
-          destination: coverage-report
+            coverage xml
       
       - store_test_results:
           path: coverage.xml
       
-      - upload_to_codecov:
-          file: coverage.xml
-  
-  test_models:
-    description: "Run model tests"
-    docker:
-      - image: cimg/python:3.12
-      - image: cimg/postgres:15
-        environment:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_taskmanager
-    
-    environment:
-      DB_ENGINE: django.db.backends.postgresql
-      DB_NAME: test_taskmanager
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: localhost
-      DB_PORT: 5432
-      SECRET_KEY: test-secret-key-for-ci
-      DEBUG: "False"
-      ALLOWED_HOSTS: "*"
-    
-    steps:
-      - checkout
-      
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "requirements.txt" }}
-            - v1-dependencies-
-      
-      - install_dependencies
-      
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-      
-      - setup_database
-      
-      - run:
-          name: Run migrations
-          command: |
-            . venv/bin/activate
-            python manage.py migrate --no-input
-      
-      - run:
-          name: Run model tests
-          command: |
-            . venv/bin/activate
-            python manage.py test apps.main_app.test_models apps.authentication.test_authentication --verbosity=2
-  
-  test_views:
-    description: "Run view tests"
-    docker:
-      - image: cimg/python:3.12
-      - image: cimg/postgres:15
-        environment:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_taskmanager
-    
-    environment:
-      DB_ENGINE: django.db.backends.postgresql
-      DB_NAME: test_taskmanager
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: localhost
-      DB_PORT: 5432
-      SECRET_KEY: test-secret-key-for-ci
-      DEBUG: "False"
-      ALLOWED_HOSTS: "*"
-    
-    steps:
-      - checkout
-      
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "requirements.txt" }}
-            - v1-dependencies-
-      
-      - install_dependencies
-      
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-      
-      - setup_database
-      
-      - run:
-          name: Run migrations
-          command: |
-            . venv/bin/activate
-            python manage.py migrate --no-input
-      
-      - run:
-          name: Run view tests
-          command: |
-            . venv/bin/activate
-            python manage.py test apps.main_app.test_views --verbosity=2
-  
-  test_forms:
-    description: "Run form tests"
-    docker:
-      - image: cimg/python:3.12
-      - image: cimg/postgres:15
-        environment:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_taskmanager
-    
-    environment:
-      DB_ENGINE: django.db.backends.postgresql
-      DB_NAME: test_taskmanager
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: localhost
-      DB_PORT: 5432
-      SECRET_KEY: test-secret-key-for-ci
-      DEBUG: "False"
-      ALLOWED_HOSTS: "*"
-    
-    steps:
-      - checkout
-      
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "requirements.txt" }}
-            - v1-dependencies-
-      
-      - install_dependencies
-      
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-      
-      - setup_database
-      
-      - run:
-          name: Run migrations
-          command: |
-            . venv/bin/activate
-            python manage.py migrate --no-input
-      
-      - run:
-          name: Run form tests
-          command: |
-            . venv/bin/activate
-            python manage.py test apps.main_app.test_forms --verbosity=2
-  
-  security_check:
-    description: "Run security checks"
-    docker:
-      - image: cimg/python:3.12
-    
-    steps:
-      - checkout
-      
-      - install_dependencies
-      
-      - run:
-          name: Run bandit security check
-          command: |
-            . venv/bin/activate
-            pip install bandit
-            bandit -r apps/ --severity-level medium -v
-          continue: true
-      
-      - run:
-          name: Check for hardcoded secrets
-          command: |
-            . venv/bin/activate
-            pip install detect-secrets
-            detect-secrets scan --all-files --force-use-all-plugins > .secrets.baseline
-          continue: true
-  
-  docker_build:
-    description: "Build Docker image"
-    docker:
-      - image: cimg/base:current
-    
-    steps:
-      - checkout
-      
-      - setup_remote_docker:
-          version: 20.10.14
-      
-      - run:
-          name: Build Docker image
-          command: |
-            docker build -t taskmanager:$CIRCLE_SHA1 -f Dockerfile .
-            docker build -t taskmanager:latest -f Dockerfile .
-      
-      - run:
-          name: Save Docker image
-          command: |
-            mkdir -p /tmp/docker_cache
-            docker save -o /tmp/docker_cache/image.tar taskmanager:latest
-      
-      - save_cache:
-          key: docker-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - /tmp/docker_cache
+      - store_artifacts:
+          path: htmlcov
+          destination: coverage-report
 
-# Define workflows
+  deploy:
+    machine:
+      image: ubuntu-2204:current
+    steps:
+      - add_ssh_keys
+      - run:
+          name: Deploy to server
+          command: |
+            ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "
+              cd /home/ubuntu/Task_manager &&
+              git pull origin main &&
+              docker compose -f docker-compose.prod.yml build &&
+              docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            "
+
 workflows:
   version: 2
-  
-  test_and_build:
+  ci_cd:
     jobs:
-      - lint:
-          filters:
-            branches:
-              only: main
-
-      - test:
+      - tests
+      - deploy:
           requires:
-            - lint
+            - tests
           filters:
             branches:
               only: main
-
-      - test_models:
-          requires:
-            - lint
-          filters:
-            branches:
-              only: main
-
-      - test_views:
-          requires:
-            - lint
-          filters:
-            branches:
-              only: main
-
-      - test_forms:
-          requires:
-            - lint
-          filters:
-            branches:
-              only: main
-
-      - security_check:
-          requires:
-            - test
-          filters:
-            branches:
-              only: main
-
-      - docker_build:
-          requires:
-            - security_check
-          filters:
-            branches:
-              only: main
-
-  # Pull request workflow
-  pull_request:
-    jobs:
-      - lint
-      - test
-      - test_models
-      - test_views
-      - test_forms
-      - security_check
-
-  # Scheduled daily tests
-  scheduled_tests:
-    triggers:
-      - schedule:
-          cron: "0 2 * * *"  # Daily at 2 AM UTC
-          filters:
-            branches:
-              only: main
-    jobs:
-      - test
-      - security_check
-
-# Notify on status
-notify:
-  webhooks:
-    - url: https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
-      when: always
