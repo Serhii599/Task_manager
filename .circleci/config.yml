@@ -11,6 +11,7 @@ jobs:
           POSTGRES_DB: test_taskmanager
     
     environment:
+      DJANGO_SETTINGS_MODULE: config.settings.base
       DB_ENGINE: django.db.backends.postgresql
       DB_NAME: test_taskmanager
       DB_USER: postgres
