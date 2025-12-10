@@ -66,15 +66,6 @@ jobs:
           command: |
             . venv/bin/activate
             coverage run --source='apps' manage.py test apps.main_app.test_models apps.main_app.test_views apps.main_app.test_forms apps.authentication.test_authentication --verbosity=2
-            coverage report
-            coverage xml
-      
-      - store_test_results:
-          path: coverage.xml
-      
-      - store_artifacts:
-          path: htmlcov
-          destination: coverage-report
 
   deploy:
     machine:
