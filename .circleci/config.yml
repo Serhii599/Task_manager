@@ -4,8 +4,9 @@ jobs:
   tests:
     docker:
       - image: cimg/python:3.12
-      - image: cimg/postgres:15
+      - image: cimg/postgres:15.3
         environment:
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_taskmanager
     
@@ -14,7 +15,7 @@ jobs:
       DB_NAME: test_taskmanager
       DB_USER: postgres
       DB_PASSWORD: postgres
-      DB_HOST: postgres
+      DB_HOST: localhost
       DB_PORT: 5432
       SECRET_KEY: test-secret-key-for-ci
       DEBUG: "False"
