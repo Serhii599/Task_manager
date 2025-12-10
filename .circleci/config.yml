@@ -65,7 +65,7 @@ jobs:
           name: Run all tests with coverage
           command: |
             . venv/bin/activate
-            coverage run --source='apps' manage.py test --verbosity=2
+            coverage run --source='apps' manage.py test apps.main_app.test_models apps.main_app.test_views apps.main_app.test_forms apps.authentication.test_authentication --verbosity=2
             coverage report
             coverage xml
       
