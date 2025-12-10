@@ -17,12 +17,13 @@ class TaskCreationForm(forms.ModelForm):
                 }
             ),
         }
-
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            # список усіх юзерів у випадаючому списку
-            self.fields['assignee'].queryset = User.objects.all()
-            self.fields['collaborators'].queryset = User.objects.all()
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # список усіх юзерів у випадаючому списку
+        self.fields['assignee'].queryset = User.objects.all()
+        self.fields['collaborators'].queryset = User.objects.all()
+        self.fields['collaborators'].required = False
 
 class ProjectCreationForm(forms.ModelForm):
     class Meta:
@@ -33,3 +34,5 @@ class ProjectCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['tasks'].queryset = Task.objects.all()
         self.fields['collaborators'].queryset = User.objects.all()
+        self.fields['tasks'].required = False
+        self.fields['collaborators'].required = False

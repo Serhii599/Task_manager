@@ -1,0 +1,82 @@
+# Coverage.py configuration file
+
+[run]
+# Specify which files to include in coverage
+source = apps
+
+# Files to omit from coverage
+omit =
+    */migrations/*
+    */tests.py
+    */test_*.py
+    */__pycache__/*
+    */venv/*
+    */virtualenv/*
+    */.venv/*
+    */site-packages/*
+    manage.py
+    config/wsgi.py
+    config/asgi.py
+    */settings/*
+
+# Enable branch coverage
+branch = True
+
+# Save coverage data to this file
+data_file = .coverage
+
+[report]
+# Show lines that weren't executed
+show_missing = True
+
+# Precision for coverage percentages
+precision = 2
+
+# Skip empty files
+skip_empty = True
+
+# Exclude lines from coverage (e.g., debug code, abstract methods)
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+    
+    # Don't complain about missing debug-only code
+    def __repr__
+    def __str__
+    
+    # Don't complain if tests don't hit defensive assertion code
+    raise AssertionError
+    raise NotImplementedError
+    
+    # Don't complain if non-runnable code isn't run
+    if 0:
+    if False:
+    if __name__ == .__main__.:
+    
+    # Don't complain about abstract methods
+    @(abc\.)?abstractmethod
+    
+    # Type checking blocks
+    if TYPE_CHECKING:
+    
+    # Pass statements
+    pass
+
+# Ignore specific error messages
+partial_branches =
+    pragma: no branch
+
+[html]
+# Directory for HTML coverage report
+directory = htmlcov
+
+# Title for HTML report
+title = Task Manager - Coverage Report
+
+[xml]
+# Output file for XML report (useful for CI/CD)
+output = coverage.xml
+
+[json]
+# Output file for JSON report
+output = coverage.json

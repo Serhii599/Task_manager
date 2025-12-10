@@ -2,3 +2,7 @@ asgiref==3.9.2
 Django==5.2.6
 psycopg2-binary==2.9.10
 sqlparse==0.5.3
+
+# Testing and Coverage
+coverage==7.6.9
+coverage[toml]==7.6.9
